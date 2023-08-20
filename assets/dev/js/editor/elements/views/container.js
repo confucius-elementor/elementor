@@ -96,7 +96,15 @@ const ContainerView = BaseElementView.extend( {
 
 		this.model.get( 'editSettings' ).set( 'defaultEditRoute', 'layout' );
 
-		elementor.listenTo( elementor.channels.deviceMode, 'change', () => this.onDeviceModeChange() );
+		this.onDeviceModeChange = this.onDeviceModeChange.bind( this );
+
+		elementor.listenTo( elementor.channels.deviceMode, 'change', this.onDeviceModeChange );
+	},
+
+	onDestroy() {
+		BaseElementView.prototype.onDestroy.apply( this, arguments );
+
+		elementor.stopListening( elementor.channels.deviceMode, 'change', this.onDeviceModeChange );
 	},
 
 	/**
@@ -399,7 +407,6 @@ const ContainerView = BaseElementView.extend( {
 		setTimeout( () => {
 			this.nestingLevel = this.getNestingLevel();
 			this.$el[ 0 ].dataset.nestingLevel = this.nestingLevel;
-
 			// Add the EmptyView to the end of the Grid Container on initial page load if there are already some widgets.
 			if ( this.isGridContainer() ) {
 				this.reInitEmptyView();
@@ -540,10 +547,11 @@ const ContainerView = BaseElementView.extend( {
 
 	handleGridEmptyView() {
 		const currentContainer = this.getCorrectContainerElement();
+		const emptyViewItem = currentContainer.find( '> .elementor-empty-view' );
 
 		this.moveElementToLastChild(
 			currentContainer,
-			currentContainer.find( '> .elementor-empty-view' ),
+			emptyViewItem,
 		);
 	},
 
